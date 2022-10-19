@@ -1,0 +1,30 @@
+import java.util.Date;
+
+
+void outputFolderContents(){
+
+    String path = "C:\\Users\\danlo\\OneDrive\\Desktop\\Programming Projects\\Processing Projects\\Colour_Game\\data\\AnimationFolder";
+
+    // we'll have a look in the data folder
+    java.io.File folder = new java.io.File(dataPath(path));
+    
+    // list the files in the data folder
+    String[] filenames = folder.list();
+
+    AnimationImages = new PImage[filenames.length];
+
+    println("About to show the contents: ");
+    for (int i = 0; i < filenames.length; i++){
+        println(filenames[i]);
+        AnimationImages[i] = loadImage(path+"\\"+filenames[i]);
+    }
+    println("Done Showing Contents");
+
+}
+
+
+void drawAnimatedObject(){
+    for (int i = 0; i < AnimationImages.length; i++){
+        image(AnimationImages[i], 0,0);
+    }
+} 

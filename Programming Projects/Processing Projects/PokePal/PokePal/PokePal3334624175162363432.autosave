@@ -1,0 +1,506 @@
+pokedex Pokedex;
+
+pokemon pokemona;
+pokemon pokemonb;
+
+ArrayList<int[]> damage;
+ArrayList<int[]> damage2;
+
+color[] typecolorarr;
+IntDict typetoind;
+ArrayList<PImage>  typeIcons;
+
+void setup()
+{
+    size(800,800);
+    background(0);
+    textSize(30);
+    textAlign(CENTER,CENTER);
+
+    typecolorarr = new color[17];
+    typetoind    = new IntDict();
+    
+    typetoind.set("Normal",0);
+    typetoind.set("Fighting",1);
+    typetoind.set("Flying",2);
+    typetoind.set("Poison",3);
+    typetoind.set("Ground",4);
+
+    typetoind.set("Rock",5);
+    typetoind.set("Bug",6);
+    typetoind.set("Ghost",7);
+    typetoind.set("Steel",8);
+    typetoind.set("Fire",9);
+
+    typetoind.set("Water",10);
+    typetoind.set("Grass",11);
+    typetoind.set("Electric",12);
+    typetoind.set("Psychic",13);
+    typetoind.set("Ice",14);
+
+    typetoind.set("Dragon",15);
+    typetoind.set("Dark",16);
+
+
+    typecolorarr[0] = color(255,255,255);
+    typecolorarr[1] = color(190, 45, 30);
+    typecolorarr[2]   = color(155,225,225);
+    typecolorarr[3]   = color(100, 20,200);
+    typecolorarr[4]   = color(170,100, 25);
+
+    typecolorarr[5]     = color(190,145,100);
+    typecolorarr[6]      = color(185,190,100);
+    typecolorarr[7]    = color( 70, 50, 80);
+    typecolorarr[8]    = color(140,140,140);
+    typecolorarr[9]     = color(190, 50, 10);
+
+    typecolorarr[10]    = color(  5,120,255);
+    typecolorarr[11]    = color( 10,170, 45);
+    typecolorarr[12] = color(240,200, 20);
+    typecolorarr[13]  = color(200, 75,210);
+    typecolorarr[14]      = color( 95,150,220);
+
+    typecolorarr[15]   = color(  0, 10, 80);
+    typecolorarr[16]     = color( 20, 20, 20);
+
+
+    typeIcons = new ArrayList<PImage>();
+    typeIcons.add( loadImage("Normal.png") );
+    typeIcons.add( loadImage("Fighting.png") );
+    typeIcons.add( loadImage("Flying.png") );
+    typeIcons.add( loadImage("Poison.png") );
+    typeIcons.add( loadImage("Ground.png") );
+
+    typeIcons.add( loadImage("Rock.png") );
+    typeIcons.add( loadImage("Bug.png") );
+    typeIcons.add( loadImage("Ghost.png") );
+    typeIcons.add( loadImage("Steel.png") );
+    typeIcons.add( loadImage("Fire.png") );
+
+    typeIcons.add( loadImage("Water.png") );
+    typeIcons.add( loadImage("Grass.png") );
+    typeIcons.add( loadImage("Electric.png") );
+    typeIcons.add( loadImage("Psychic.png") );
+    typeIcons.add( loadImage("Ice.png") );
+
+    typeIcons.add( loadImage("Dragon.png") );
+    typeIcons.add( loadImage("Dark.png") );
+
+    /*
+        Using gen5 pokedex, eg clefairy is normal type, so need to 
+        consider getting more and less recent versions of the database 
+        if possible
+    */
+    Pokedex = new pokedex("pokedex.csv");
+    Pokedex.typechart = Pokedex.loadTypechart("typechartgen5.csv");
+
+    pokemona = new pokemon(Pokedex.pokemonData("Charmeleon"));
+    pokemonb = new pokemon(Pokedex.pokemonData("Metapod"));
+    println(pokemona.name);
+    println(pokemonb.name);
+}
+
+void draw()
+{
+    clear();    
+
+    displayMatchup(pokemona, pokemonb);
+}
+
+
+void typeMatchupMode()
+{
+    for (String type : typetoind.keys())
+    {
+        displayTypeCircle(type);
+        translate(0,height*0.9/typetoind.size());
+    }
+}
+
+void displayTypeCircle(String type)
+{
+    if (type == "Bug")
+    {
+        image(typeIcons[typetoind.get(type)], 0, 0);
+    }
+}
+
+void displayMatchup(pokemon pokemona, pokemon pokemonb)
+{   
+       // Draw pokemona's name on screen
+    fill(0,255,0);
+    text(pokemona.name, width/4, height/10);
+    fill(255);
+    pokemona.displayStats(width/4,height/10);
+
+
+
+    // Draw pokemonb's name on screen
+    fill(255,0,0);
+    text(pokemonb.name, 3*width/4, height/10);
+    fill(255);
+    pokemonb.displayStats(3*width/4,height/10);
+
+    
+    display_matchup_graph(pokemona, pokemonb,   width/20, 3*height/4);
+    display_matchup_graph(pokemonb, pokemona, 3*width/5, 3*height/4);
+
+}
+
+
+class pokemon
+{
+    TableRow originalPokemonRow;
+    String name;
+    int atk;
+    int atkSp;
+    int def;
+    int defSp;
+    int hp;
+    int speed;
+    String type1;
+    String type2;
+
+    pokemon(TableRow pokemonRow)
+    {
+        originalPokemonRow = pokemonRow;
+        name  = originalPokemonRow.getString(2);
+        atk   = int(originalPokemonRow.getString(4));
+        atkSp = int(originalPokemonRow.getString(6));
+        def   = int(originalPokemonRow.getString(5));
+        defSp = int(originalPokemonRow.getString(7));
+        hp    = int(originalPokemonRow.getString(3));
+        speed = int(originalPokemonRow.getString(8));
+        type1 = originalPokemonRow.getString(10);
+        type2 = originalPokemonRow.getString(11);
+    }
+
+    void displayStats(float x, float y)
+    {
+        y+=width/16;
+        x-=width/10;
+        text(type1, x,y);
+        x+=width/5;
+        text(type2, x,y);
+        x-=width/20;
+        y+=width/16;
+        text("atk:   "+atk, x,y);
+        y+=width/16;
+        text("def:   "+def, x,y);
+        y+=width/16;
+        text("atkSp: "+atkSp, x,y);
+        y+=width/16;
+        text("defSp: "+defSp, x,y);
+        y+=width/16;
+        text("hp:    "+hp, x,y);
+        y+=width/16;
+        text("speed: "+speed, x,y);
+        
+        
+    }
+
+    public ArrayList<int[]> matchup(pokemon pokeb)
+    {
+        ArrayList<int[]> damage = new ArrayList<int[]>();
+        damage.add(new int[100]);damage.add(new int[100]);
+        damage.add(new int[100]);damage.add(new int[100]);
+
+        int[] dmg_vals1 = damage.get(0);
+        for (int power = 1; power < 101; power++) //20-120 is best for power range//
+        {
+            dmg_vals1[power-1] = Damage(this, pokeb, power, false, type1);
+        }
+
+        int[] dmg_vals2 = damage.get(1);
+        for (int power = 1; power < 101; power++)
+        {
+            dmg_vals2[power-1] = Damage(this, pokeb, power, true, type1);
+        }
+
+        if (!type2.equals(""))
+        {
+            int[] dmg_vals3 = damage.get(2);
+            for (int power = 1; power < 101; power++)
+            {
+                dmg_vals3[power-1] = Damage(this, pokeb, power, false, type2);
+            }
+
+            int[] dmg_vals4 = damage.get(3);
+            for (int power = 1; power < 101; power++)
+            {
+                dmg_vals4[power-1] = Damage(this, pokeb, power, true, type2);
+            }
+        }
+        return damage;
+    }
+
+
+    float typematchup(pokemon pb, String atype)
+    {
+        int row_ind = 0;
+        //println("Type: " + atype);
+        for (TableRow row : Pokedex.typechart.rows())
+        {
+            //println(row.getString(0));
+            if (row.getString(0).equals(atype))
+            {
+                //println("Found type" + atype + " at index " + row_ind);
+                break;
+            }
+            row_ind+=1;
+        }
+        
+        float multiplier                       = float(Pokedex.typechart.getStringColumn(pb.type1)[row_ind]);
+        if (!pb.type2.equals("")) {multiplier *= float(Pokedex.typechart.getStringColumn(pb.type2)[row_ind]);}
+        return multiplier;
+    }
+    
+}
+
+class pokedex
+{
+    /*
+    Pokedex class should handle manipulating the 'pokedex' csv to make it easier to use
+    */
+    Table Pokedex;
+    Table typechart;
+    pokedex(String dex_location)
+    {  
+        Pokedex   = loadTable(dex_location, "header");
+        typechart = null;
+    }
+
+    public Table loadTypechart(String chart_location)
+    {
+        typechart = loadTable(chart_location, "header");
+        for (TableRow row : typechart.rows())
+        {
+            break;
+        }
+
+        return typechart;
+    }
+
+    public String[] getPokemonNames()
+    {
+        /*
+        return a simple list containing all of the names of the pokemon in the database
+        */
+        String[] pokemon_names = new String[0];
+        for (TableRow row : Pokedex.rows())
+        {
+            pokemon_names = append(pokemon_names, row.getString(2));
+        }
+        return pokemon_names;
+    }
+    public int pokemonCount()
+    {
+        /*
+        return the number of pokemon in the database
+        */
+        return Pokedex.getRowCount();
+    }
+    public String getName(int ind)
+    {
+        /*
+        return the name of the pokemon at index ind in the database
+        */
+        int i = 0;
+        for (TableRow row : Pokedex.rows())
+        {
+            if (i == ind)
+            {
+                return row.getString(2);
+            }
+            i += 1;
+        }
+        return null;
+    }
+
+    public FloatDict findPokemonByName(String nameGuess)
+    {
+        /*
+        return the pokemon index list in order of most likely to be the searched pokemon
+
+        1-> Go through all pokemon and calculate 'score' based on the typed request
+        2-> Sort all by score
+        3-> Return list of indexes as a string list of the names
+        */
+
+        int[] indexArr     = new int[pokemonCount()];
+        float[] scoreArr   = new float[pokemonCount()];
+        String[] stringArr = new String[0];
+        FloatDict data = new FloatDict(); 
+
+        // instance the indexArr as a list of the indexes to be rearranged later into the score order
+        for (int i = 0; i < pokemonCount(); i++)
+        {indexArr[i] = i;}
+
+        // 1-> Go through all pokemon and calculate 'score' based on the typed request
+        for (int i = 0; i < pokemonCount(); i++)
+        {
+            String name  = getName(i);
+            scoreArr[i]  = evaluateName(name.toLowerCase(),nameGuess.toLowerCase());
+            data.set(name,scoreArr[i]);
+        }
+        data.sortValuesReverse();
+
+        return data;
+    }
+
+    private float evaluateName(String realName, String guessName)
+    {
+        /*
+        evaluate how close two names are by checking letters and allocating score points
+        */
+        float score = 0;
+        char[] realNameArr  = stringToCharArr(realName);
+        char[] guessNameArr = stringToCharArr(guessName);
+
+        boolean firstLetter     = true;
+        int firstLetterPosition = -1;
+        for (char let : guessNameArr)
+        {
+            for (int i = 0; i < realNameArr.length; i++)
+            {
+                if (realNameArr[i] == let)
+                {
+                    // Storing the position of the first letter of the guess in the real name
+                    if (firstLetter){firstLetterPosition=i; firstLetter=false;}
+                    
+                    score += 1.0/(float)(i+1);
+                    break;
+                }
+            }
+        }
+        // TODO - Need to make this check the first letter of the guessname that is ACTUALLY in the real name   
+        if (firstLetterPosition != -1)
+        {
+            for (int i = 0; i < guessNameArr.length; i++)
+            {
+                if (firstLetterPosition+i < realNameArr.length)
+                {
+                    if (realNameArr[firstLetterPosition+i]==guessNameArr[i])
+                    {
+                        score+=0.5;
+                    }
+                }
+            }
+        }
+        
+        return score;
+    }
+
+    public char[] stringToCharArr(String str)
+    {
+        /*
+        convert strings to character arrays
+        */
+        char[] charArr = new char[str.length()];
+        for (int i = 0; i < str.length(); i++)
+        {
+            charArr[i] = str.charAt(i);
+        }
+        return charArr;
+    }
+
+    public TableRow pokemonData(String pokemonName)
+    {
+        for (TableRow row : Pokedex.rows())
+        {
+            if (pokemonName.toLowerCase().equals(row.getString(2).toLowerCase()))
+            {
+                return row;
+            }
+        }
+        return null;
+    }
+    public TableRow pokemonData(int pokemonIndex)
+    {
+        int n = 0;
+        for (TableRow row : Pokedex.rows())
+        {
+            if (n == pokemonIndex)
+            {
+                return row;
+            }
+            n+=1;
+        }
+        return null;
+    }
+}
+
+
+int Damage(pokemon pa, pokemon pb, int power, boolean sp, String type)
+{
+    float A; float B; float C;
+    int dmg = 1;
+    if (sp)
+    {
+        A = (2.0+(2.0*50.0)/5.0)*power*((float)pa.atkSp/(float)pb.defSp);
+        B = 2.0+A/50.0;
+        C = B * 1.5 * pa.typematchup(pb, type);
+        dmg = ceil(C);
+    }
+    if (!sp)
+    {
+        //println("Type " + type + " against " + pb.type1 + " and " + pb.type2 + pa.typematchup(pb, type));
+        //println("Physical: " + pa.atk/pb.def);
+        A = (2.0+(2.0*50.0)/5.0)*power*((float)pa.atk/(float)pb.def);
+        B = 2.0+A/50.0;
+        C = B * 1.5 * pa.typematchup(pb, type);
+        dmg = ceil(C);
+    }
+    return dmg;
+}
+
+
+
+void display_matchup_graph(pokemon pa, pokemon pb, float x, float y)
+{
+    damage = new ArrayList<int[]>();
+    damage.add(new int[100]);damage.add(new int[100]);
+    damage.add(new int[100]);damage.add(new int[100]);
+    damage = pa.matchup(pb);
+
+    pushMatrix();
+    pushStyle();
+    translate(x,y);
+    stroke(typecolorarr[typetoind.get(pa.type1)]);
+    strokeWeight(3);
+    plot(damage.get(0), width/3,height/4-3);
+    //stroke(typecolorarr[typetoind.get(pa.type1)]);
+    plot(damage.get(1), width/3,height/4-3);
+    if (!pa.type2.equals(""))
+    {
+        println(pa.type2);
+        stroke(typecolorarr[typetoind.get(pa.type2)]);
+        plot(damage.get(2), width/3,height/4);
+        plot(damage.get(3), width/3,height/4);
+    }
+    popStyle();
+
+    popMatrix();
+}
+
+
+void plot(int[] yvalues, float w, float h)
+{
+    for (int i = 1; i < yvalues.length-1; i++)
+    {
+        line(i*w/yvalues.length, height/4-(h/100.0)*yvalues[i], (i+1)*w/yvalues.length, height/4-(h/100.0)*yvalues[i+1]);
+    }
+}
+
+
+
+ //void keyPressed()
+ //{
+ //    if (key == BACKSPACE && name.length() > 0)
+ //    {
+ //        name = name.substring( 0, name.length()-1 );
+ //    }else if (key != BACKSPACE){
+ //        name  = name + key;
+ //    }
+ //    println("Pressed: ", key);
+ //}

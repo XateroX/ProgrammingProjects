@@ -1,0 +1,25 @@
+l_lim = 1;
+u_lim = 10;
+
+r=0;
+
+for n = (l_lim:u_lim)
+    steps_record = [];
+    while r~=1
+        r = collatz(n,1);
+        steps_record = [steps_record, r];
+    end
+end
+
+
+function r_n = collatz(n,steps)
+    while steps~=0
+        if mod(n,2)~=0
+            n = 3*n+1;
+        else
+            n=n/2;
+        end
+        steps=steps-1;
+    end
+    r_n = n;
+end

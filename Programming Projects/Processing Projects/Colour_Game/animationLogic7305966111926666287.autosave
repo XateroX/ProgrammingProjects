@@ -1,0 +1,16 @@
+import java.util.Date;
+
+
+void outputFolderContents(){
+
+    // we'll have a look in the data folder
+    java.io.File folder = new java.io.File(dataPath("C:\\Users\\danlo\\OneDrive\\Desktop\\Programming Projects\\Processing Projects\\Colour_Game\\data\\AnimationFolder"));
+    
+    // list the files in the data folder
+    String[] filenames = folder.list();
+    println("About to show the contents: ");
+    for (int i = 0; i < filenames.length; i++){
+        println(filenames[i]);
+    }
+    println("Done Showing Contents");
+}

@@ -1,0 +1,72 @@
+class mainScreen
+{
+    ArrayList<ring> rings;
+    ArrayList<target> targets;
+
+
+    gameManager GM;
+    mainScreen(gameManager GMi)
+    {
+        GM = GMi;
+    }
+
+    void draw()
+    {
+        pushMatrix();
+        pushStyle();
+        
+        drawRings();
+        drawTargets();
+        //drawValues(); //Score, etc.
+
+        updateRings();
+        
+        popStyle();
+        popMatrix();
+    }
+    void setup()
+    {
+        rings   = new ArrayList<ring>();
+        targets = new ArrayList<target>();
+    }
+    void mousePressed(){}
+    void mouseReleased(){}
+    void keyPressed(){}
+    void keyReleased(){}
+
+    void drawRings()
+    {
+        pushMatrix();
+        pushStyle();
+        
+        for (ring c_ring : rings)
+        {
+            c_ring.draw();
+        }
+        
+        popStyle();
+        popMatrix();
+    }
+
+    void drawTargets()
+    {
+        pushMatrix();
+        pushStyle();
+        
+        for (target c_target : targets)
+        {
+            c_target.draw();
+        }
+        
+        popStyle();
+        popMatrix();
+    }
+
+    void updateRings()
+    {
+        for (ring c_ring : rings)
+        {
+            c_ring.update();
+        }
+    }
+}

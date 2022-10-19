@@ -1,0 +1,1051 @@
+class Tile{
+  PVector pos;
+  PVector pipeInd = new PVector(-1,-1);
+
+  Object classType;
+
+  int tileNum;        //What position this tile is in the 'Tiles' list --> can be calculated when needed using position
+  int type;           //What the tile is, e.g wall, barrel, door, etc
+  int floorType;      //What the floor of that tile is, e.g magic, grassy, wooden, etc
+  int tSetF;          //Determines the textures used for the tile floor
+  int tSetO;          //Determines the textures used for the tile object
+  int pathLast = -2;  //Used for pathing, determining which tile this tile was travelled to from
+
+  float runningWeight = 0;      //Used to determine how far away a path chain has travelled from its starting point (NOT including its distance from the destination)
+
+  boolean edgeWater;            //Just to determine whether tile is close to edge of board (will be turned to water during map generation)
+  boolean pathChecked = false;  //For path finding, whether the tile has been encountered during this search before
+
+  Tile(PVector tilePosition, int initialType){
+    type      = initialType;     //Initialised as with empty tile (but has a floor)
+    classType = this.getClass();      //##MAY NOT WORK##
+    floorType = 0;               //Initialised as grass floor
+    pos       = tilePosition;
+    tileNum   = convertPosToTile( pos );
+    tSetF     = floor( random(0,100) );
+    tSetO     = floor( random(0,200) );
+  }
+
+  void calcDisplay(){
+    //(1)Takes the tile in Tiles
+    //(2)Reads its type to find what it needs to be cast to
+    //(3)Casts it to the object then runs its cast display function
+    //## NEED TO FIX WHERE 0 SHOULD BE ##
+    pushStyle();
+
+    //##################################################################################################################//
+    //## NOT WORKING, IS LOOKING FOR A CLASS 'objType' WHEN IT SHOULD BE LOOKING FOR THE CLASS NAME STORED IN ONJTYPE ##//
+    //##################################################################################################################//
+    //objType = catalogueObjects.get( type );
+    //( ( objType )( Tiles.get(tileNum) ) ).display();
+
+    //(   ( classType ) (Tiles.get(tileNum) )  ).display();
+    //##################################################################################################################//
+    //## NOT WORKING, IS LOOKING FOR A CLASS 'objType' WHEN IT SHOULD BE LOOKING FOR THE CLASS NAME STORED IN ONJTYPE ##//
+    //##################################################################################################################//
+
+    //#############//
+    //## BAD FIX ##//
+    //#############//
+    if(type == 0){
+      println("Printing bugfixing code...");
+      println(type);
+      println(tileNum);
+      println(Tiles.get(tileNum));
+      println(Tiles.get(tileNum).type);
+      println(Tiles.get(tileNum).tileNum);
+      
+      (   (Empty)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 1){
+      (   (Wall)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 2){
+      (   (Barrel)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 3){
+      (   (Door)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 4){
+      (   (Table)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 5){
+      (   (Stool)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 6){
+      (   (Counter)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 7){
+      (   (MiscMachine)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 8){
+      (   (Tree)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 9){
+      (   (Water)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 10){
+      (   (LrgTree)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 11){
+      (   (Pump)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 12){
+      (   (Vat)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 13){
+      (   (Machinery)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 14){
+      (   (Field)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 15){
+      (   (InvisFiller)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 16){
+      (   (ContainedFire)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 17){
+      (   (TradingOutpost)(Tiles.get(tileNum))   ).display();
+    }
+    if(type == 18){
+      (   (Port)(Tiles.get(tileNum))   ).display();
+    }
+    //#############//
+    //## BAD FIX ##//
+    //#############//
+
+    popStyle();
+  }
+}
+
+class Container extends Tile{
+  PVector containerInd = new PVector(-1,-1);
+
+  ArrayList<Integer> contentQuantity = new ArrayList<Integer>();
+  ArrayList<String>  contentItem     = new ArrayList<String>();
+
+  Container(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+}
+
+class Empty extends Tile{
+  //pass
+
+  Empty(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+  }
+}
+
+class Wall extends Tile{
+  //pass
+
+  Wall(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    relativeObjPos     = findRelativeCoordinates(tileNum);
+    borderIndicesFinal = findTileBorder(tileNum, 1);//At n, looking for type 1 (wall)
+    pushStyle();
+    imageMode(CENTER);
+    if(borderIndicesFinal.get(7) == 1)  //If tile below is a wall, this is a middle wall
+    {
+      image(magicWallHidden, relativeObjPos.x, relativeObjPos.y);
+    }
+    else
+    {
+      image(magicWallMiddle, relativeObjPos.x, relativeObjPos.y);
+    }
+    popStyle();
+  }
+}
+
+class Barrel extends Container{
+  int invTwidth  = 4;
+  int invTheight = 4;
+
+  float invXwidth  = 30;
+  float invYheight = 30;
+
+  Barrel(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    //fill(210,170,30);
+    //stroke(40);
+    //ellipse(relativeObjPos.x, relativeObjPos.y,  wallWidth/2, wallHeight/2);
+    imageMode(CENTER);
+    image(magicBarrel, relativeObjPos.x, relativeObjPos.y);
+    popStyle();
+  }
+}
+
+//##########################################################//
+//## NEED TO MAKE DOORS WORK VERTICALLY STACKING TOGETHER ##// --> POSSIBLY GIVING IT A LARGE TEXTURE WHEN STACKED 
+//##########################################################//
+class Door extends Tile{
+  boolean doorOpen = false;   //**** NEW ATTRIBUTE ****//
+
+  Door(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    borderIndicesFinal = findTileBorder(tileNum, 1);  //At n, looking for type 1 (wall)
+    pushStyle();
+    imageMode(CENTER);
+    doorJoined = false;
+    if( ((borderIndicesFinal.get(1) == 0)&&(borderIndicesFinal.get(3) == 1)) && ((borderIndicesFinal.get(5) == 1)&&(borderIndicesFinal.get(7) == 0)) )     //Right corner (UP DWN)
+    {
+      image(magicDoor, relativeObjPos.x, relativeObjPos.y);
+      doorJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 1)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 1)) )     //Right corner (UP DWN)
+    {
+      image(magicDoorSideway, relativeObjPos.x, relativeObjPos.y);
+      doorJoined = true;
+    }
+    if(doorJoined == false)
+    {
+      image(magicDoor, relativeObjPos.x, relativeObjPos.y);
+    }
+    popStyle();
+  }
+}
+
+class Table extends Tile{
+  //Something like beerType on the table currently???
+
+  Table(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    borderIndicesFinal = findTileBorder(tileNum, 4);
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);
+    image(magicTable, relativeObjPos.x, relativeObjPos.y);
+    popStyle();
+  }
+}
+
+class Stool extends Tile{
+  boolean seatOccupied = false;   //**** NEW ATTRIBUTE ****//
+
+  Stool(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    //fill(255,255,255);
+    //stroke(40);
+    //ellipse(relativeObjPos.x, relativeObjPos.y,  wallWidth/2, wallHeight/2);
+    imageMode(CENTER);
+    image(magicStool, relativeObjPos.x, relativeObjPos.y);
+    popStyle();
+  }
+}
+
+class Counter extends Tile{
+  boolean counterOccupied = false;    //**** NEW ATTRIBUTE ****//
+
+  Counter(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    borderIndicesFinal = findTileBorder(tileNum, 6);
+    //squarePos = findSquarePosition(borderIndicesFinal);        //##MAY WORK, LIKELY NOT##//
+    
+    pushStyle();
+    imageMode(CENTER);
+    counterJoined = false;
+    if( ((borderIndicesFinal.get(1) == 1)&&(borderIndicesFinal.get(3) == 1)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 0)) )     //Right corner (UP)
+    {
+      image(magicCounterCornerRight, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 1)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 1)&&(borderIndicesFinal.get(7) == 0)) )     //Left corner (UP)
+    {
+      image(magicCounterCornerLeft, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 0)&&(borderIndicesFinal.get(3) == 1)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 1)) )     //Right corner (DWN)
+    {
+      image(magicCounterCornerRightDown, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 0)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 1)&&(borderIndicesFinal.get(7) == 1)) )     //Left corner (DWN)
+    {
+      image(magicCounterCornerLeftDown, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 1)&&(borderIndicesFinal.get(3) == 1)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 1)) )     //Right corner (UP DWN)
+    {
+      image(magicCounterCornerRightUpDown, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 1)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 1)&&(borderIndicesFinal.get(7) == 1)) )     //Left corner (UP DWN)
+    {
+      image(magicCounterCornerLeftUpDown, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 1)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 1)) )     //Vertical hidden
+    {
+      image(magicCounterHidden, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 0)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 1)) )     //End Upper
+    {
+      image(magicCounterUpper, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 1)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 0)) )     //End lower
+    {
+      image(magicCounterLower, relativeObjPos.x, relativeObjPos.y);
+      counterJoined = true;
+    }
+    if( ((borderIndicesFinal.get(1) == 0)&&(borderIndicesFinal.get(3) == 1)) && ((borderIndicesFinal.get(5) == 1)&&(borderIndicesFinal.get(7) == 0)) )     //Middle
+    {     
+      image(magicCounterMiddle, relativeObjPos.x, relativeObjPos.y);
+    }
+    if( ((borderIndicesFinal.get(1) == 0)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 1)&&(borderIndicesFinal.get(7) == 0)) )     //Middle
+    {     
+      image(magicCounterMiddle, relativeObjPos.x, relativeObjPos.y);
+    }
+    if( ((borderIndicesFinal.get(1) == 0)&&(borderIndicesFinal.get(3) == 1)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 0)) )     //Middle
+    {     
+      image(magicCounterMiddle, relativeObjPos.x, relativeObjPos.y);
+    }
+    if( ((borderIndicesFinal.get(1) == 0)&&(borderIndicesFinal.get(3) == 0)) && ((borderIndicesFinal.get(5) == 0)&&(borderIndicesFinal.get(7) == 0)) )     //Middle
+    {     
+      image(magicCounterMiddle, relativeObjPos.x, relativeObjPos.y);
+    }
+    
+    popStyle();
+  }
+}
+
+class MiscMachine extends Tile{     //## STILL NEEDS TO BE DECIDED ON ##//
+  //pass
+
+  MiscMachine(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //WEIRD MULTI-TILE RULES APPLY HERE
+  }
+}
+
+class Tree extends Tile{
+  //Maybe fruitNum or something, e.g how many acorns are on tree, or how many apples --> probbaly have apple trees, orange trees, etc as separate tiles, and just use this for number of fruits
+
+  Tree(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);
+    //## WILL EXTEND ABOVE MULTIPLE TILES ##//
+    image(tree, relativeObjPos.x, relativeObjPos.y);
+    popStyle();
+  }
+}
+
+class Water extends Tile{
+  //Maybe depth???
+
+  Water(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);
+    fill(100,100,255);
+    if(tileNum>=colNum)
+    {
+      if(Tiles.get(tileNum-colNum).type == 9)
+      {
+        image(waterCenter, relativeObjPos.x, relativeObjPos.y);
+      }
+      else
+      {
+        image(waterFront, relativeObjPos.x, relativeObjPos.y);
+      }
+    }
+    popStyle();
+  }
+}
+
+class LrgTree extends Tile{
+  //same as regular, fruitNum to keep track of how many groeths it has
+
+  LrgTree(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CORNER);
+    //## WILL EXTEND ABOVE MULTIPLE TILES ##//
+    image(lrgTree, relativeObjPos.x-(3*wallWidth), relativeObjPos.y-(3*wallWidth));
+    popStyle();
+  }
+}
+
+//########################################################################################//
+//## NEED TO REDO FLUID, WITH DIRECTIONS, ON-THE-GO FLOW, SPLIT FLUIDS IN ONE PIPE, ETC ##//
+//########################################################################################//
+class Pump extends Tile{
+  
+  float fluidIn;       //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, input /sec
+  float fluidOut;      //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, output /sec
+  float fluidWithin;   //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, current volume within
+
+  Pump(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);
+    
+    //fill(230,170,80);
+    //ellipse(relativeObjPos.x, relativeObjPos.y, wallWidth/2, wallHeight/2);
+    image(pump, relativeObjPos.x, relativeObjPos.y);
+    
+    popStyle();
+  }
+}
+
+class Vat extends Tile{
+  int inputterInd = -1;
+
+  float fluidIn;       //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, input /sec 
+  float fluidOut;      //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, output /sec
+  float fluidWithin;   //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, current volume within
+
+  Vat(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);
+    
+    //fill(100,150,200);
+    //ellipse(relativeObjPos.x, relativeObjPos.y, wallWidth/2, wallHeight/2);
+    image(vat, relativeObjPos.x, relativeObjPos.y);
+    
+    popStyle();
+  }
+}
+
+class Machinery extends Tile{
+  int inputterInd = -1;
+
+  float fluidIn;       //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, input /sec
+  float fluidOut;      //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, output /sec
+  float fluidWithin;   //##JUST HOLDS ONE FOR NOW##If multiple different fluids inside machine, current volume within
+
+  Machinery(PVector pos, int type){ //## NEED TO CHANGE TO BE SPECIFIC, e.g A JUICER OR A SQUEEZER ##//
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);
+    rectMode(CENTER);
+    
+    //fill(232, 63, 105);
+    //rect(relativeObjPos.x, relativeObjPos.y, wallWidth, wallHeight);
+    image(machinery, relativeObjPos.x, relativeObjPos.y);
+    
+    popStyle();
+  }
+}
+
+class Field extends Tile{
+  PVector cropInd      = new PVector(-1,-1);    //**Will change to the correct value after being placed**//
+
+  Field(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    rectMode(CENTER);
+    imageMode(CENTER);
+    
+    //noFill();
+    //rect(relativeObjPos.x, relativeObjPos.y, wallWidth-10, wallHeight-10);
+    image(field, relativeObjPos.x, relativeObjPos.y);
+    
+    popStyle();
+  }
+}
+
+class InvisFiller extends Tile{
+  //Which type it is copying??? --> exact tile it is copying too, so it can point to it e.g for containers being clicked on or when being removed
+
+  InvisFiller(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);        //## FIND A BETTER WAY, SO ONLY SOME HAVE FLOORS DRAWN ##//
+    
+    //**WILL ONLY EVER BE CALLED FOR BUG FIXING**//
+    /*
+    relativeObjPos = findRelativeCoordinates(n);
+    pushStyle();
+    
+    fill(0);
+    ellipse(relativeObjPos.x, relativeObjPos.y, wallWidth/2, wallHeight/2);
+    
+    popStyle();
+    */
+  }
+}
+
+class ContainedFire extends Tile{
+  //pass
+
+  ContainedFire(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);
+    
+    image(fireContained, relativeObjPos.x, relativeObjPos.y);
+    
+    popStyle();
+  }
+}
+
+class TradingOutpost extends Container{
+  int invTwidth  = 10;
+  int invTheight =  6;
+
+  float invXwidth  = 30;
+  float invYheight = 30;
+
+  TradingOutpost(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);  //##CORNER NOT WORKING CORRECTLY
+    
+    //Trading outpost on eastern part of map
+    image(tradingOutpost, relativeObjPos.x-(3*wallWidth), relativeObjPos.y-(3*wallHeight));
+    
+    popStyle();
+  }
+}
+
+class Port extends Tile{                            //## NEED TO FIX HOW IT WILL WORK WITH THE OTHER PUMP CLASS ##//
+  //pass
+
+  Port(PVector pos, int type){
+    super(pos, type);
+    tileNum = convertPosToTile( pos );
+  }
+
+  void display(){
+    //Has spaces => draw floor
+    drawFloor(pos, tileNum);
+    
+    relativeObjPos = findRelativeCoordinates(tileNum);
+    pushStyle();
+    imageMode(CENTER);  //##CORNER NOT WORKING CORRECTLY
+    
+    //Port on western part of map
+    image(port, relativeObjPos.x-(4*wallWidth), relativeObjPos.y-(4*wallHeight));
+    
+    popStyle();
+  }
+}
+
+
+//###############################################################################################################################################################################//
+//## CAN POSSIBLY DEAD THIS ALL OFF MY BURGER, SORTS OUT THE -1 INPUTTER / CONTAINER INDS, BUT WILL NOW NOT HAVE THEM IF NOT INPUTTER / CONTAINER -> MAY NEED LIST SORTING THO ##//
+//###############################################################################################################################################################################//
+//##HYPER SMALL BRAIN JANK, REMOVE AND REPLACE AS SOON AS POSSIBLE##//
+/*
+void updateTileInfo(int tileNum){
+  //Sorts out the removal and listInd of vats and machinery
+  //tileNum = tile number
+  if( (12<=tileNum) && (tileNum<=13) )  //** this will need to be updated if more inputters are added**
+  {
+    if(Tiles.get(tileNum).inputterInd > -1)  //If there was a vat here...
+    {
+      for(int i=Tiles.get(tileNum).inputterInd+1; i<vatList.size(); i++)//Shift other values
+      {
+        Tiles.get( vatList.get(i).tileNum ).inputterInd -= 1;
+      }
+      vatList.remove( Tiles.get(tileNum).inputterInd );        //Remove from list
+      Tiles.get(tileNum).inputterInd = -1;                     //Reset to being not been an inputter
+    }
+  }
+  if( (12<=tileNum) && (tileNum<=13) )  //** this will need to be updated if more inputters are added**
+  {
+    if(Tiles.get(tileNum).inputterInd > -1)  //If there was machinery here...
+    {
+      for(int i=Tiles.get(tileNum).inputterInd+1; i<machineryList.size(); i++)//Shift other values
+      {
+        Tiles.get( machineryList.get(i).tileNum ).inputterInd -= 1;
+      }
+      //println("MACHINERY BEING REMOVED");          //*****
+      machineryList.remove( Tiles.get(tileNum).inputterInd );  //Remove from list
+      Tiles.get(tileNum).inputterInd = -1;                     //Reset to being not been an inputter
+    }
+  }
+}
+*/
+
+
+//Forms a blank environment (grass center, water at edge)
+void formGridArray(){
+  for (int j=0; j<rowNum; j++)
+  {
+    
+    for (int i=0; i<colNum; i++)
+    {
+      //################################################################################################//
+      //## RANDOMS ARE 1 ABOVE MAX TILE INDEX, DUR TO FLOORING ##CHANGING TO ROUND IS PROBABLY BETTER ##//
+      //################################################################################################//
+
+      Tiles.add( new Tile( new PVector(i,j), 0) );
+
+      //If at edge (water)
+      if( ( (ceil(i*wallWidth) < edgeTolerance)||(floor(i*wallWidth) > (boardWidth-edgeTolerance)) ) || ( (ceil(j*wallHeight) < edgeTolerance)||(floor(j*wallHeight) > (boardHeight-edgeTolerance)) ) ){
+        addTileToGrid( (colNum*j)+(i), 9);
+        Tiles.get( (colNum*j)+(i) ).edgeWater = true;
+      }
+      //If not at edge (grass)
+      else{
+        addTileToGrid( (colNum*j)+(i), 0);
+        Tiles.get( (colNum*j)+(i) ).edgeWater = false;
+      }
+    }
+  }
+}
+
+void drawGridIndex(){
+  
+  //##MAY BE ERRORS WITH BOOLEAN, 2 IN ONE##
+  screenEdgeCond1 = ( ( user.pos.x +user.vel.x ) <= ( edgeTolerance ) )               || ( ( user.pos.y +user.vel.y ) <= ( edgeTolerance ) ); //To the top-side and left-side
+  screenEdgeCond2 = ( ( user.pos.x +user.vel.x ) >= ( screenWidth - edgeTolerance ) ) || ( ( user.pos.y +user.vel.y ) >= ( screenHeight - edgeTolerance ) );//To the bottom-side and right-side
+  
+  boardEdgeCond1 = ( ( relativePos.x - screenWidth /2 + user.vel.x) > ( 0 ) ) && ( ( relativePos.x + screenWidth /2 + user.vel.x) < ( boardWidth  ) );
+  boardEdgeCond2 = ( ( relativePos.y - screenHeight/2 + user.vel.y) > ( 0 ) ) && ( ( relativePos.y + screenHeight/2 + user.vel.y) < ( boardHeight ) );
+
+  //##CANT GO BEYOND TOLERANCE, BUT NO JANK##(--2--)//
+  if(screenEdgeCond1 || screenEdgeCond2)
+  {
+    relativePos.x += user.vel.x;
+    relativePos.y += user.vel.y;
+    user.pos.x    -= user.vel.x;
+    user.pos.y    -= user.vel.y;
+    followerU.pos.x    -= user.vel.x;
+    followerU.pos.y    -= user.vel.y;
+    if( ( relativePos.x+screenWidth /2 + user.vel.x ) > (boardWidth) ) //X cond
+    {
+      relativePos.x = boardWidth-screenWidth/2;
+      //user.pos.x    += user.vel.x;
+      //user.pos.y    += user.vel.y;
+    }
+    if( ( relativePos.x-screenWidth /2 + user.vel.x ) < (0) )          //X cond
+    {
+      relativePos.x = screenWidth/2;
+      //user.pos.x    += user.vel.x;
+      //user.pos.y    += user.vel.y;
+    }
+    if( ( relativePos.y+screenHeight/2 + user.vel.x ) > (boardHeight) )//Y cond
+    {
+      relativePos.y = boardHeight-screenHeight/2;
+      //user.pos.x    += user.vel.x;
+      //user.pos.y    += user.vel.y;
+    }
+    if( ( relativePos.y-screenHeight/2 + user.vel.y ) < (0) )          //Y cond
+    {
+      relativePos.y = screenHeight/2;
+      //user.pos.x    += user.vel.x;
+      //user.pos.y    += user.vel.y;
+    }
+  }
+  
+  //##CANT GO BEYOND TOLERANCE, BUT NO JANK##(--2--)//
+    
+  
+  if ( boardEdgeCond1 || boardEdgeCond2 )//If not at edge of board
+  {
+    //(1)Find how many columns and rows needed
+    colEncounterLower = floor( ( (relativePos.x) - (screenWidth /2) ) / wallWidth );
+    colEncounterUpper = ceil ( ( (relativePos.x) + (screenWidth /2) ) / wallWidth );
+    rowEncounterLower = floor( ( (relativePos.y) - (screenHeight/2) ) / wallHeight );
+    rowEncounterUpper = ceil ( ( (relativePos.y) + (screenHeight/2) ) / wallHeight );
+    //println("colLower; ",colEncounterLower);    //*****//
+    //println("rowLower; ",rowEncounterLower);    //*****//
+    //println("{}");                              //*****//
+    //println("colUpper; ",colEncounterUpper);    //*****//
+    //println("rowUpper; ",rowEncounterUpper);    //*****//
+    
+    //     <--->
+    //     <--------->
+    // +  +
+    // |  |
+    // +  |        n
+    //    |      0XXX
+    //    |    m XXXX
+    //    +      XXX1
+    
+    //(2)Establish start and end tiles
+    startTile = ( colEncounterLower ) + ( colNum )*( rowEncounterLower ); //Labelled 0, will usually be half off-screen
+    userTile  = ceil( (colNum)*( (rowEncounterLower) + ((user.pos.y)*(wallHeight))/(screenRows) ) + 
+                  ( (( colEncounterLower ) + ( (user.pos.x)*(wallWidth) )/(screenCols)) ) ); //The tile of the user //##NOT CURRENTLY USED##//
+    
+    //(3)Draw between the established tiles
+    for (int j=0; j<screenRows; j++)
+    {
+      for (int i=0; i<screenCols; i++)
+      {
+        pushStyle();
+        noFill();
+        stroke(180);
+        pushMatrix();
+        rectMode(CENTER);
+        tileToDraw = startTile + ((j)*(colNum))+(i); //
+        if ( (tileToDraw > 0) && (tileToDraw < colNum*rowNum)) //To prevent errors trying to drawn -ve indices
+        {
+          println("tileToDraw: ", tileToDraw);
+          Tiles.get( tileToDraw ).calcDisplay();
+        }
+        popMatrix();
+        popStyle();
+      }
+    }
+    
+    //* * * * *
+    //* * * * *
+    //* * X * *
+    //* * * * *
+    //* * * * * => centered (not at edge of board)
+  }
+  else
+  {
+    //## MAY NOT BE NEEDED, SEEMS TO ALREADY BE DEALING WITH IT (MOSTLY, STILL GETS STUCK ON EDGE) ##//
+    
+    //- - - - -
+    //- * * * *
+    //- * X * *
+    //- * * * *
+    //- * * * * => not centered (at edge of board)
+  }
+  
+}
+//##NEEDS TO ONLY DRAW THE TILES VISIBLE##//
+//##SCREEN DRAW MOVES WITH USER TO CENTER USER, UNTIL AT EDGE THEN USER SHOULD NOT BE CENTERED##//
+
+void drawGridBoxes(){
+  for (int j=0; j<screenRows; j++)
+  {
+    for (int i=0; i<screenCols; i++)
+    {
+      pushStyle();
+      noFill();
+      stroke(180);
+      pushMatrix();
+      rectMode(CENTER);
+      tileToDraw = startTile + ((j)*(colNum))+(i);
+      if ( (tileToDraw > 0) && (tileToDraw < rowNum*colNum) )
+      {
+        relativeObjPos = findRelativeCoordinates(tileToDraw);
+        rect(relativeObjPos.x, relativeObjPos.y, (wallWidth), (wallHeight));
+        text(Tiles.get(tileToDraw).tileNum, relativeObjPos.x -wallWidth/4, relativeObjPos.y);
+      }
+      
+      popMatrix();
+      popStyle();
+    }
+  }
+}
+
+//Find grid center
+void findGridCenter(){
+  for (int j=0; j<rowNum; j++) //## CAN MAKE MORE EFFICIENT , BUT TOO SMALL BRAIN (IS CHECKING ALL ROWS, ONLY NEEDS TO CHECK IN SCREEN AREA) ##//
+  {  
+    if ( ((mouseY-screenHeight/2)+relativePos.y > (wallHeight*j) ) && ((mouseY-screenHeight/2)+relativePos.y <= (wallHeight*(j+1)) ) )
+    {
+      centerY = ( screenHeight/2 ) - ( relativePos.y - ( wallHeight*j ) ) + wallHeight/2;
+      centerXY.y = int(j);
+      break;
+    }  
+  }
+  for (int i=0; i<colNum; i++)
+  {
+    if ( ((mouseX-screenWidth/2)+relativePos.x > (wallWidth*i) ) && ((mouseX-screenWidth/2)+relativePos.x <= (wallWidth*(i+1)) ) )
+    {
+      centerX = ( screenWidth/2 ) - ( relativePos.x - ( wallWidth*i ) ) + wallWidth/2;
+      centerXY.x = int(i);
+      break;
+    }
+  }
+  //println("CenterXY; ", centerX," , " ,centerY);           //*****//
+}
+//## IS FINDING CENTRES, BUT NOT AT MOUSE ##//
+
+//Draw grid center
+void drawGridCenter(){
+  pushStyle();
+  fill(255);
+  ellipse(centerX, centerY, 10, 10);
+  popStyle();
+}
+
+void addTileToGrid(int tileNum, int type){
+  //Places the tile of given type at the given location (removing the old tile)
+  //(1)Find and create new tile, then place into grid
+
+
+
+
+  //######################//
+  //## NOT WORKING HERE ##//
+  //######################//
+  //objType = catalogueObjects.get(type);
+  //( objType ) newTile = (objType)( Tiles.get(tileNum).pos, type, objType );
+  //######################//
+  //## NOT WORKING HERE ##//
+  //######################//
+
+  //#############//
+  //## BAD FIX ##//
+  //#############//  
+
+  if(type == 0){
+    Empty newTile = new Empty( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 1){
+    Wall newTile = new Wall( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 2){
+    Barrel newTile = new Barrel( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 3){
+    Door newTile = new Door( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 4){
+    Table newTile = new Table( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 5){
+    Stool newTile = new Stool( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 6){
+    Counter newTile = new Counter( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 7){
+    MiscMachine newTile = new MiscMachine( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 8){
+    Tree newTile = new Tree( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 9){
+    Water newTile = new Water( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 10){
+    LrgTree newTile = new LrgTree( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 11){
+    Pump newTile = new Pump( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 12){
+    Vat newTile = new Vat( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 13){
+    Machinery newTile = new Machinery( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 14){
+    Field newTile = new Field( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 15){
+    InvisFiller newTile = new InvisFiller( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 16){
+    ContainedFire newTile = new ContainedFire( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 17){
+    TradingOutpost newTile = new TradingOutpost( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  if(type == 18){
+    Port newTile = new Port( Tiles.get(tileNum).pos, type );
+    Tiles.remove(tileNum);
+    Tiles.add(tileNum, newTile);
+  }
+  //Port newTile = new Port( Tiles.get(tileNum).pos, type );
+  //#############//
+  //## BAD FIX ##//
+  //#############//
+
+  //(2)Add tile to corresponding list if needed
+  //########################################################################//
+  //## HOPEFULLY MORE EFFICIENT, HOWEVER COULD ACTUALLY BE LESS EFFICIENT ##//
+  //########################################################################//
+  if( (type == 2) || (type == 17) ) //If a container...
+  {
+
+    //Add to container list
+    if(type == 2){
+      addBarrelToList        (Tiles.get(tileNum).pos, tileNum);
+    }
+    if(type == 17){
+      addTradingOutpostToList(Tiles.get(tileNum).pos, tileNum);
+    }
+
+  }
+  if( ((type == 11) || (type == 12)) || (type == 13) ) //If a fluid based (e.g pump, vat, machinery, etc)...
+  {
+
+    //Add to corresponding list
+    if(type == 11){
+      addPumpToList     (Tiles.get(tileNum).pos, tileNum);
+    }
+    if(type == 12){
+      addVatToList      (Tiles.get(tileNum).pos, tileNum);
+    }
+    if(type == 13){
+      addMachineryToList(Tiles.get(tileNum).pos, tileNum);
+    }
+
+  }
+}
+
+//############################################//
+//## ADD PULSATING EFFECT, USING SINUSOIDAL ##//
+//############################################//

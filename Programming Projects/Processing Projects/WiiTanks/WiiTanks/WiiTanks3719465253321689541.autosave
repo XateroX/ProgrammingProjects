@@ -1,0 +1,91 @@
+Game game;
+
+void setup()
+{
+    fullScreen(P3D);
+    ortho();
+    game = new Game();
+    game.assets.add( game.newMap(10,10) );
+    game.assets.add( game.newTank() );
+
+}
+
+void draw()
+{
+    background(100);
+    lights();
+    camera(width/2,height/2 - 150*height/100,-width, width/2,height/2,0 ,0,0,1);
+    scale(0.2);
+    rotateZ((float)frameCount/200);
+
+    pushMatrix();
+    //noStroke();
+    shape(game.assets.get(0));
+    popMatrix();
+    pushMatrix();
+    translate(50,50,-200);
+    rotateX(-PI/2);
+    shape(game.assets.get(1));
+
+    //translate(width/2, height/2, 0);
+    popMatrix();
+}
+
+
+class Game
+{
+    Tank tank1;
+
+    ArrayList<PShape> assets;
+    Game()
+    {
+        tank1  = new Tank();
+        assets = new ArrayList<PShape>();
+    }
+
+    class Tank
+    {
+        Tank()
+        {
+
+        }
+    }
+
+    PShape newMap(int xLen, int yLen)
+    {
+        PShape map = createShape(GROUP);
+        float size = (float)width/(float)xLen;
+        for (int x = 0; x < xLen; x++)
+        {
+            for (int y = 0; y < yLen; y++)
+            {
+                PShape c_box = createShape(BOX, (int)size);
+                c_box.translate(size*x, size*y);
+                map.addChild(c_box);
+            }
+        }
+        return map;
+    }
+
+    PShape newTank()
+    {
+        PShape tank = createShape(GROUP);
+
+        PShape head = loadShape("wiiTank_head.obj");
+        //head.translate(0,0,10);
+        head.resetMatrix();
+        head.scale(30);
+        head.translate(0,0,-370);
+        
+        PShape body = loadShape("wiiTank_body.obj");
+        body.resetMatrix();
+        body.scale(30);
+        body.translate(0,0,-370);
+        
+
+        tank.addChild(head);
+        tank.addChild(body);
+
+        return tank;
+    }
+}

@@ -1,0 +1,49 @@
+class grid{
+    float size;
+    PVector center;
+    grid[] subgrids;
+    
+    grid(float isize, PVector ipos){
+        size=isize;
+        center = new PVector(0,0);
+        center.x = ipos.x;
+        center.y = ipos.y;
+        subgrids = new grid[9];
+    }
+  
+    void subdivide(int iters){
+      subgrids[0] = new grid(size/3, new PVector(center.x - size/3, center.y - size/3));  
+      subgrids[1] = new grid(size/3, new PVector(center.x         , center.y - size/3));
+      subgrids[2] = new grid(size/3, new PVector(center.x + size/3, center.y - size/3));
+
+      subgrids[3] = new grid(size/3, new PVector(center.x - size/3, center.y));  
+      subgrids[4] = new grid(size/3, new PVector(center.x         , center.y));  
+      subgrids[5] = new grid(size/3, new PVector(center.x + size/3, center.y));  
+
+      subgrids[6] = new grid(size/3, new PVector(center.x - size/3, center.y + size/3));
+      subgrids[7] = new grid(size/3, new PVector(center.x         , center.y + size/3));
+      subgrids[8] = new grid(size/3, new PVector(center.x + size/3, center.y + size/3));
+    }
+
+    void drawme(){
+        pushMatrix();
+        pushStyle();
+
+        noFill();
+        stroke(0);
+        strokeWeight(width/500);
+        translate(center.x,center.y);
+        rect(0,0, size,size);
+ 
+        drawSubgrids();
+
+        popMatrix();
+        popStyle();
+    }
+
+    void drawSubgrids(){
+        for (int i = 0; i < 9; i++){
+            subgrids[i].drawme();
+        }
+    }
+}

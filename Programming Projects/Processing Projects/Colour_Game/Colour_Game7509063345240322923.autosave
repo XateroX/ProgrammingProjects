@@ -1,0 +1,12 @@
+void setup(){
+    fullScreen();
+}
+
+void draw(){
+    clear();
+    background(0);
+    fill(0);
+    stroke(255);
+    strokeWeight(5);
+    ellipse(width/2,height/2,300,3   00);
+}
