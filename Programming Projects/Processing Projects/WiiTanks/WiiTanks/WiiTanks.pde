@@ -12,7 +12,7 @@ void setup()
 
     game.tankList.add( game.newTank(true) );
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 0; i++)
     {
         game.tankList.add( game.newTank(false) );
     }
@@ -25,10 +25,11 @@ void draw()
 
     background(100);
     lights();
-    cameraPos = new PVector(width/2,width/2-400*width/100,-2.5*width);
+    //cameraPos = new PVector(width/2,width/2+400*width/100,-2.5*width);
+    cameraPos = new PVector(width/2,width/2+100,6*width);
     cameraTar = new PVector(width/2,width/2,0);
     camera(cameraPos.x,cameraPos.y,cameraPos.z,  cameraTar.x,cameraTar.y,cameraTar.z  ,0,0,1);
-    perspective(PI/30.0,(float)width/height,1,100000);
+    perspective(PI/30.0,(float)width/height,1,1000000);
     pushMatrix();
     scale(0.5);
     translate(width,width);
@@ -50,6 +51,7 @@ class Game
 {
     ArrayList<Tank> tankList;
     ArrayList<PShape> assets;
+    PImage floor1;
 
     PVector lStickPos = new PVector(width/3, 2*height/3);
     float lStickrad   = width/5;
@@ -60,6 +62,8 @@ class Game
     {
         assets = new ArrayList<PShape>();
         tankList = new ArrayList<Tank>();
+
+        floor1 = loadImage("floor1.png");
     }
 
 
@@ -68,8 +72,18 @@ class Game
     {
         pushMatrix();
         
+        
         shape(assets.get(0));
-        translate(-(float)width/20.0,-(float)width/20.0);
+        translate(-width/20.0,-width/20.0);
+
+        //pushMatrix();
+        //pushStyle();
+        //resetMatrix();
+        //translate(-width/2,-height/2,0);
+        //scale(6);
+        //image(floor1, 0,0);
+        //popStyle();
+        //popMatrix();
 
         drawTanks();
 
@@ -107,6 +121,7 @@ class Game
         PShape body;
         PVector pos;
         PVector vel;
+        float targetVel;
 
         float headAng;
         float bodyAng;
@@ -123,9 +138,10 @@ class Game
             headAng = random(2*PI);
             bodyAng = random(2*PI);
 
-            pos = new PVector(random(-width/2,width/2),random(-width/2,width/2), -150);
-            vel = new PVector(0,1);
+            pos = new PVector(random(-width/2,width/2),random(-width/2,width/2),150);
+            vel = new PVector(0,5);
             vel.rotate(-bodyAng);
+            targetVel = 0;
 
             head = loadShape("wiiTank_head.obj");
             head.resetMatrix();
@@ -140,6 +156,7 @@ class Game
 
         void draw()
         {
+            pushStyle();
             pos.add(vel);
 
             //println("drawn at ", pos.x, pos.y);
@@ -162,29 +179,51 @@ class Game
 
 
             pushMatrix();
-            translate( pos.x + 200*vel.x, pos.y + 200*vel.y, pos.z );
+            float ellRadx = map(vel.x, 0, 3,0,200);
+            float ellRady = map(vel.y, 0, 3,0,200);
+            translate( 0,0, pos.z );
+            line(pos.x,pos.y, pos.x + ellRadx, pos.y + ellRady);
+            translate( pos.x + ellRadx, pos.y + ellRady, 5);
             //translate(cameraPos.x,cameraPos.y,cameraPos.z);
             fill(200*sin((float)frameCount/10.0));
+            strokeWeight(5);
+            
             ellipse(0,0, 50,50);
+            popStyle();
             popMatrix();
         }
 
 
         void update()
-        {}
+        {
+            vel.setMag(lerp(vel.mag(),targetVel, 0.05));
+        }
 
 
         void processInput()
         {
+            targetVel = 0;
             for (int i=0; i < touches.length; i++)
             {
                 PVector c_touch = new PVector(touches[i].x, touches[i].y);
                 if (dist(c_touch.x,c_touch.y, game.lStickPos.x,game.lStickPos.y) < game.lStickrad)
                 {
-                    PVector diff = new PVector(c_touch.x-game.lStickPos.x, c_touch.y-game.lStickPos.y);
-                    diff.setMag(vel.mag());
+                    float velMag = 0.1+vel.mag();
+                    PVector diff = new PVector(-c_touch.x+game.lStickPos.x, c_touch.y-game.lStickPos.y);
+
+                    //int headingE = round(diff.heading()/8)*8;
+                    //diff.rotate(headingE-diff.heading());
+
+                    targetVel = 5;//map(diff.mag(), 0, game.lStickrad, 0, 4);
                     vel = new PVector(diff.x,diff.y);
-                    bodyAng = -PVector.angleBetween(vel,new PVector(0,1));
+                    vel.setMag(velMag);
+                    bodyAng = -vel.heading() + PI/2 ;
+                }
+
+                else if (dist(c_touch.x,c_touch.y, game.rStickPos.x,game.rStickPos.y) < game.rStickrad)
+                {
+                    PVector diff = new PVector(-c_touch.x+game.rStickPos.x, c_touch.y-game.rStickPos.y);
+                    headAng = -diff.heading() + PI/2;
                 }
             }
         }
@@ -211,5 +250,18 @@ class Game
     {
         Tank newTank = new Tank(isPlayer);
         return newTank;
+    }
+}
+
+void mousePressed()
+{
+    if (mouseX < width/2)
+    {
+        game.lStickPos = new PVector(mouseX,mouseY);
+    }
+
+    else if (mouseX >= width/2)
+    {
+        game.rStickPos = new PVector(mouseX,mouseY);
     }
 }

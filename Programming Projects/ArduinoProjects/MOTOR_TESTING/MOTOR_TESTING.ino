@@ -11,7 +11,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   ang += 1;
-  myservo.write(ang);
+  //myservo.write(ang);
   delay(50);
   if (ang >= 180)
   {

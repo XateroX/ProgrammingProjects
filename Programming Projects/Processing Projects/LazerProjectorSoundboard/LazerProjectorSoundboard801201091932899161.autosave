@@ -1,0 +1,15 @@
+import processing.sound.*;
+
+
+
+ArrayList<SinOsc> oscs;
+
+void setup()
+{
+      
+}
+
+void draw()
+{
+
+}

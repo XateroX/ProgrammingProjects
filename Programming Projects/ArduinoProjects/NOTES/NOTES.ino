@@ -1,21 +1,43 @@
 #include "pitches.h"
 
+int n = 0;
+int tar = 0;
+
+#define LASER   8
+#define SPEAKER 7
+#define stickX  0
+#define stickY  1
+
+float val = 0;
+
 void setup() {
-  pinMode(8,OUTPUT);
-  digitalWrite(8,HIGH);
+  pinMode(LASER,OUTPUT);
+  pinMode(SPEAKER,OUTPUT);
+  digitalWrite(LASER,HIGH);
 
-  // iterate over the notes of the melody:
-
-  for (int thisNote = 250; thisNote < 500; thisNote+=1) {
-    tone(7, thisNote, 100);
-    delay(50);
-    //tone(7, thisNote+2, 100);
-    //delay(100);
-    //Serial.print(thisNote);
-  }
+  Serial.begin(9600);
 }
 
 void loop() {
+  //tar = abs(analogRead(stickX)-512)/4.0;
+  //val = (tar*0.999 + val*0.01);
 
-  // no need to repeat the melody.
+  for (int i = 200; i < 300; i++)
+  {
+    tone(SPEAKER, i, 200);
+    delay(200);
+  }
+
+  //tone()
+
+  //digitalWrite(SPEAKER,HIGH);
+  //delay(min(200,1000.0/(2*val)));
+  //digitalWrite(SPEAKER,LOW);
+  //delay(min(200,1000.0/(2*val)));
+  
+
+  
+  //analogWrite(LASER,stickX);
+  //analogWrite(6, abs(val/4.0));//255 * (1+sin((float)n/1000000.0 * 2*PI))/2.0);
+  //delay(500);
 }

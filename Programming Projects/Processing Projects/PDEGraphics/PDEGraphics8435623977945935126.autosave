@@ -1,0 +1,80 @@
+ArrayList<PVector> points;
+float pointsize;
+
+void setup()
+{
+    size(1000,1000);
+    points    = new ArrayList<PVector>();
+    pointsize = 10;
+
+    addPoints(0.1);
+}
+
+void draw()
+{
+    iteratePoints();
+    drawPoints();
+}
+
+void iteratePoints()
+{
+    for (int i = 0; i < points.size(); i++)
+    {
+        c_point = points.get(i);
+        points.remove(i);
+
+        PVector new_point = new PVector(c_point.x,c_point.y);
+        PVector diff      = diff(c_point);
+        new_point.x += diff.x;
+        new_point.y += diff.y;
+        points.add(i,new_point);
+    }
+}
+
+PVector diff(PVector point)
+{
+    return new PVector(dx(point),dy(point));
+}
+
+Float dx(PVector point)
+{
+    float value = 0;
+
+    value = sin(2*PI * point.x/500);
+
+    return value;
+}
+Float dy(PVector point)
+{
+    float value = 0;
+
+    value = cos(2*PI * point.x/500);
+
+    return value;
+}   
+
+void drawPoints()
+{
+    for (PVector c_point : points)
+    {
+        ellipse(c_point.x,c_point.y,pointsize,pointsize);
+    }
+}
+
+void addPoints(Float prop)
+{
+    float n = prop;
+
+    for (int x = 0; x < width; x++)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            if (n > 1)
+            {
+                points.add( new PVector(x,y) );
+                n = prop;
+            }
+            n += prop;
+        }
+    }
+}

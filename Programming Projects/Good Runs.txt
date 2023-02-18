@@ -1,0 +1,2 @@
+C:\Users\danlo\OneDrive\Desktop\Programming Projects\Machine-Learning-Experiments\Generator Experiments\pokemonSpriteInterpolator\dataset\trainingOutputs\20221215-101803
+C:\Users\danlo\OneDrive\Desktop\Programming Projects\Machine-Learning-Experiments\Generator Experiments\pokemonSpriteInterpolator\dataset\trainingOutputs\20221214-215013

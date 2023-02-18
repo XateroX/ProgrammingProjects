@@ -1,0 +1,41 @@
+import processing.sound.*;
+
+int oscNum;
+
+ArrayList<SinOsc> oscs;
+ArrayList<Integer> oscFreqs;
+
+void setup()
+{
+    oscNum = 3;
+
+    oscs     = new ArrayList<SinOsc>();
+    oscFreqs = new ArrayList<Integer>(); 
+
+    for (int i = 0; i < oscNum; i++)
+    {
+        oscFreqs.add(round(random(0,500)));
+    }
+
+    for (int i = 0; i < oscNum; i++)
+    {
+        oscs.add(new SinOsc(this));
+    }
+
+}
+
+void draw()
+{
+    for (int i = 0; i < oscNum; i++)
+    {
+        int freq = oscFreqs.get(i);
+        oscFreqs.remove(i);
+        oscFreqs.add(i,freq+1);
+    }
+
+    for (int i = 0; i < oscs.size(); i++)
+    {
+        oscs.get(i).freq( oscFreqs.get(i) );
+        oscs.get(i).play();
+    }
+}

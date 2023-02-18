@@ -1,9 +1,10 @@
 #define LASER 8
-#define SPEAKER 6
-float hz = 10;
-float t = 0.01;
+#define SPEAKER 7
+float hz = 20;
+float t = 200.0;
+int n = 0;
 boolean mode = 0;
-float vol = 1.0;
+float maxVol = 100.0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -15,17 +16,12 @@ void setup() {
 }
 
 void loop() {
-  analogWrite(SPEAKER, vol);
-  delay(t*1000.0);
-  if (mode == 0){
-    hz += 10.0;
-    if (hz >= 500){
-      mode = 1;}
-  
-  }else{
-    hz -= 10.0;
-    if (hz <= 0){
-      mode = 0;}
+  for (int i = 0; i < hz; i++)
+  {
+    digitalWrite(SPEAKER, HIGH);
+    delay(t/(2.0*(float)hz)); 
+    digitalWrite(SPEAKER, LOW);
+    delay(t/(2.0*(float)hz)); 
   }
-    
+  hz += 1;
 }
